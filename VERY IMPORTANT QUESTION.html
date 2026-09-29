@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A Special Question ✨</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+--bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #2e1065 100%);
+--card-bg: rgba(255, 255, 255, 0.05);
+--card-border: rgba(255, 255, 255, 0.12);
+--accent-rose: #f43f5e;
+--accent-rose-hover: #e11d48;
+--accent-rose-glow: rgba(244, 63, 94, 0.4);
+--text-main: #f8fafc;
+--text-muted: #94a3b8;
+--btn-no-bg: rgba(255, 255, 255, 0.08);
+--btn-no-hover: rgba(255, 255, 255, 0.15);
+}
+
+• {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+min-height: 100vh;
+background: var(--bg-gradient);
+color: var(--text-main);
+display: flex;
+justify-content: center;
+align-items: center;
+overflow: hidden;
+position: relative;
+}
+
+/* Ambient Background Glows */
+.glow-1, .glow-2 {
+position: absolute;
+border-radius: 50%;
+filter: blur(100px);
+pointer-events: none;
+z-index: 0;
+}
+.glow-1 {
+width: 350px;
+height: 350px;
+background: rgba(244, 63, 94, 0.2);
+top: 15%;
+left: 20%;
+}
+.glow-2 {
+width: 400px;
+height: 400px;
+background: rgba(139, 92, 246, 0.25);
+bottom: 15%;
+right: 20%;
+}
+
+/* Card Layout */
+.card {
+position: relative;
+z-index: 10;
+background: var(--card-bg);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid var(--card-border);
+border-radius: 24px;
+padding: 48px 40px;
+width: 90%;
+max-width: 480px;
+text-align: center;
+box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.icon-wrapper {
+width: 64px;
+height: 64px;
+background: rgba(244, 63, 94, 0.12);
+border: 1px solid rgba(244, 63, 94, 0.3);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+margin: 0 auto 24px;
+font-size: 28px;
+}
+
+h1 {
+font-family: 'Playfair Display', serif;
+font-size: 2.1rem;
+font-weight: 600;
+margin-bottom: 12px;
+line-height: 1.25;
+letter-spacing: -0.02em;
+}
+
+p.subtitle {
+color: var(--text-muted);
+font-size: 0.98rem;
+margin-bottom: 36px;
+line-height: 1.5;
+}
+
+/* Button Group */
+.btn-group {
+display: flex;
+gap: 16px;
+justify-content: center;
+align-items: center;
+min-height: 52px;
+}
+
+.btn {
+padding: 14px 32px;
+border-radius: 12px;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+border: none;
+transition: all 0.25s ease;
+outline: none;
+}
+
+.btn-primary {
+background: var(--accent-rose);
+color: #ffffff;
+box-shadow: 0 4px 20px var(--accent-rose-glow);
+flex: 1;
+}
+
+.btn-primary:hover {
+background: var(--accent-rose-hover);
+transform: translateY(-2px);
+box-shadow: 0 6px 24px rgba(244, 63, 94, 0.5);
+}
+
+.btn-secondary {
+background: var(--btn-no-bg);
+color: var(--text-main);
+border: 1px solid var(--card-border);
+flex: 1;
+}
+
+.btn-secondary:hover {
+background: var(--btn-no-hover);
+}
+
+/* Animation Utilities */
+.hidden {
+display: none !important;
+}
+
+.fade-in {
+animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+from {
+opacity: 0;
+transform: translateY(12px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+/* Floating Hearts Canvas for Success Stage */
+canvas {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+z-index: 5;
+}
+</style>
+</head>
+<body>
+
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+<canvas id="canvas"></canvas>
+
+<div class="card fade-in" id="card">
+<div class="icon-wrapper" id="icon">✨</div>
+<h1 id="question">do u like me?</h1>
+<p class="subtitle" id="subtitle">be fr with me real quick</p>
+
+<div class="btn-group" id="btnGroup">
+<button class="btn btn-primary" id="yesBtn">Yeah</button>
+<button class="btn btn-secondary" id="noBtn">Nah</button>
+</div>
+</div>
+
+<script>
+// State machine configuration
+const stages = {
+STAGE_1: 'STAGE_1',
+STAGE_2: 'STAGE_2',
+SUCCESS: 'SUCCESS'
+};
+
+let currentStage = stages.STAGE_1;
+let noClickCount = 0;
+
+const card = document.getElementById('card');
+const icon = document.getElementById('icon');
+const question = document.getElementById('question');
+const subtitle = document.getElementById('subtitle');
+const yesBtn = document.getElementById('yesBtn');
+const noBtn = document.getElementById('noBtn');
+
+// Stage 1 Prompts
+const stage1NoPrompts = [
+{ q: "wait fr??", sub: "think about it again yk..." },
+{ q: "aint no way", sub: "u missclicked for sure, try again" },
+{ q: "last chance bro...", sub: "u really gonna say no to me? 😭" }
+];
+
+// Stage 2 Prompts
+const stage2NoPrompts = [
+{ q: "hold on think about it", sub: "it'd be so fun plssss 🥺" },
+{ q: "reconsidering yet?", sub: "i promise it'll be worth it" },
+{ q: "u cant be serious", sub: "look at u trying to press no again" }
+];
+
+function updateCardContent(title, subText, iconSymbol) {
+card.classList.remove('fade-in');
+void card.offsetWidth; // Trigger reflow for animation restart
+
+if (title) question.textContent = title;
+if (subText) subtitle.textContent = subText;
+if (iconSymbol) icon.textContent = iconSymbol;
+
+card.classList.add('fade-in');
+}
+
+function handleNo() {
+noClickCount++;
+
+if (currentStage === stages.STAGE_1) {
+if (noClickCount <= stage1NoPrompts.length) {
+const prompt = stage1NoPrompts[noClickCount - 1];
+updateCardContent(prompt.q, prompt.sub);
+}
+
+if (noClickCount >= 3) {
+noBtn.classList.add('hidden');
+subtitle.textContent = "yeah 'nah' isn't an option anymore so click yeah 😊";
+}
+}
+else if (currentStage === stages.STAGE_2) {
+if (noClickCount <= stage2NoPrompts.length) {
+const prompt = stage2NoPrompts[noClickCount - 1];
+updateCardContent(prompt.q, prompt.sub);
+}
+
+if (noClickCount >= 3) {
+noBtn.classList.add('hidden');
+subtitle.textContent = "fate has spoken u HAVE to say yes now ✨";
+}
+}
+}
+
+function handleYes() {
+if (currentStage === stages.STAGE_1) {
+// Transition to Stage 2
+currentStage = stages.STAGE_2;
+noClickCount = 0;
+noBtn.classList.remove('hidden');
+
+updateCardContent(
+"will u date me then?",
+"i really wanna take u out yk",
+"🌹"
+);
+}
+else if (currentStage === stages.STAGE_2) {
+// Transition to Success Stage
+currentStage = stages.SUCCESS;
+noBtn.classList.add('hidden');
+yesBtn.classList.add('hidden');
+
+updateCardContent(
+"WE DATINGGG 🎉",
+"YAYYYYYYY let's gooo",
+"💖"
+);
+
+startHeartParticles();
+}
+}
+
+yesBtn.addEventListener('click', handleYes);
+noBtn.addEventListener('click', handleNo);
+
+// Subtle Particle Background on Success
+function startHeartParticles() {
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let width = (canvas.width = window.innerWidth);
+let height = (canvas.height = window.innerHeight);
+
+window.addEventListener('resize', () => {
+width = canvas.width = window.innerWidth;
+height = canvas.height = window.innerHeight;
+});
+
+const particles = Array.from({ length: 30 }, () => ({
+x: Math.random() * width,
+y: height + Math.random() * 100,
+size: Math.random() * 14 + 10,
+speedY: Math.random() * 1.5 + 0.8,
+speedX: (Math.random() - 0.5) * 0.5,
+opacity: Math.random() * 0.7 + 0.3
+}));
+
+function drawHeart(x, y, size, opacity) {
+ctx.save();
+ctx.globalAlpha = opacity;
+ctx.fillStyle = '#f43f5e';
+ctx.beginPath();
+const topCurveHeight = size * 0.3;
+ctx.moveTo(x, y + topCurveHeight);
+ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
+ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + size, x, y + size);
+ctx.bezierCurveTo(x, y + size, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
+ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + topCurveHeight);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+}
+
+function animate() {
+ctx.clearRect(0, 0, width, height);
+particles.forEach((p) => {
+p.y -= p.speedY;
+p.x += p.speedX;
+if (p.y < -30) {
+p.y = height + 20;
+p.x = Math.random() * width;
+}
+drawHeart(p.x, p.y, p.size, p.opacity);
+});
+requestAnimationFrame(animate);
+}
+
+animate();
+}
+</script>
+</body>
+</html>
